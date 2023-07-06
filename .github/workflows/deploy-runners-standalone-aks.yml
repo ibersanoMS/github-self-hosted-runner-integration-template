@@ -9,14 +9,12 @@ permissions:
 
 env:
     StateStoreContainerName: 'tfstate'
-    stateStoreFilename: 'runners.tfstate'
+    StateStoreFilename: 'runners.tfstate'
 jobs:
     deploy-environment:
         runs-on: 'ubuntu-latest'
         env:
           TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
-          StateStoreContainerName: 'tfstate'
-          stateStoreFilename: 'runners.tfstate'
         steps:
             - uses: actions/checkout@v3
             
@@ -73,8 +71,6 @@ jobs:
       runs-on: 'ubuntu-latest'
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/aks'
-        StateStoreContainerName: 'tfstate'
-        stateStoreFilename: 'runners.tfstate'
       steps:
             - uses: actions/checkout@v3
             
