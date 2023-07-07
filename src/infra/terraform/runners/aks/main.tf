@@ -28,7 +28,7 @@ resource "azurerm_kubernetes_cluster" "akscluster" {
     enable_auto_scaling          = true
     min_count                    = 3
     max_count                    = 4
-    vnet_subnet_id               = var.vnetSubnetId
+    vnet_subnet_id               = data.terraform_remote_state.environment.outputs.vnetSubnetId
     only_critical_addons_enabled = true
     zones                        = ["1", "2", "3"]
     upgrade_settings {
