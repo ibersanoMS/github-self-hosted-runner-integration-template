@@ -1,8 +1,16 @@
+data "terraform_remote_state" "environment" {
+  backend = "azurerm"
+
+  config = {
+    key                  = "environment.tfstate"
+  }
+}
+
 # Creates cluster with default linux node pool
 resource "azurerm_kubernetes_cluster" "akscluster" {
   name                      = var.clusterName
   location                  = var.location
-  resource_group_name       = var.resourceGroupName
+  resource_group_name       = data.terraform_remote_state.environment.outputs.resourceGroupName
   kubernetes_version        = "1.25.5"
   dns_prefix                = var.clusterName
   identity {
@@ -41,7 +49,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "linux_user_pool" {
   min_count             = 1
   max_count             = 3
   os_type               = "Linux"
-  vnet_subnet_id        = var.vnetSubnetId
+  vnet_subnet_id        = data.terraform_remote_state.environment.outputs.vnetSubnetId
   zones                 = ["1", "2", "3"]
 }
 
