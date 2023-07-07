@@ -132,6 +132,8 @@ jobs:
               with:
                 cluster-name: ${{ steps.clusterInfo.outputs.clusterName }}
                 resource-group: ${{ steps.clusterInfo.outputs.resourceGroupName }}
+                admin: 'false'
+                use-kubelogin: 'true'
 
             - name: Install runner 
               run: |
