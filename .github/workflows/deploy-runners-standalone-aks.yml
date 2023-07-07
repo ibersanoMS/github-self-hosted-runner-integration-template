@@ -138,5 +138,7 @@ jobs:
               run: |
                 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml
                 kubectl apply -f https://github.com/actions/actions-runner-controller/releases/download/v0.22.0/actions-runner-controller.yaml --server-side
-                kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
+                if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager']; then
+                        kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
+                fi
                 kubectl apply -f runnerdeployment.yaml
