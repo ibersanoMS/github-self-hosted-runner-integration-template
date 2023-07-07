@@ -8,14 +8,6 @@ variable "location" {
   default = "eastus"
 }
 
-variable "resourceGroupName" {
-  type = string
-}
-
-variable "vnetSubnetId" {
-  type = string
-}
-
 variable "stateSaContainerName" {
   type = string
   default = "tfstate"
