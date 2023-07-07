@@ -52,7 +52,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "linux_user_pool" {
   min_count             = 1
   max_count             = 3
   os_type               = "Linux"
-  vnet_subnet_id        = data.terraform_remote_state.environment.outputs.vnetSubnetId
+  vnet_subnet_id        = data.terraform_remote_state.environment.outputs.runnerSubnetId
   zones                 = ["1", "2", "3"]
 }
 
