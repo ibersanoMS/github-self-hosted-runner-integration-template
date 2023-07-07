@@ -16,4 +16,16 @@ variable "vnetSubnetId" {
   type = string
 }
 
+variable "stateSaContainerName" {
+  type = string
+  default = "tfstate"
+}
+
+variable "stateSaName" {
+  type = string
+}
+
+variable "stateSaRg" {
+  type = string
+}
 

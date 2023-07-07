@@ -2,7 +2,10 @@ data "terraform_remote_state" "environment" {
   backend = "azurerm"
 
   config = {
+    storage_account_name = var.stateSaName
+    container_name       = var.stateSaContainerName
     key                  = "environment.tfstate"
+    resource_group_name  = var.stateSaRg
   }
 }
 
