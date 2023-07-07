@@ -118,8 +118,8 @@ jobs:
               working-directory: ${{ env.TerraformWorkingDirectory }}
               run: |
                  terraform apply -auto-approve tf_plan
-                 echo resourceGroupName=$(terraform output resourceGroupName) >> $GITHUB_OUTPUT
-                 echo clusterName=$(terraform output clusterName) >> $GITHUB_OUTPUT
+                 echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
+                 echo clusterName=$(terraform output -raw clusterName) >> $GITHUB_OUTPUT
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
