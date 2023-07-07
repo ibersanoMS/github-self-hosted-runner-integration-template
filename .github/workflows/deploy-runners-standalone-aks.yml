@@ -13,7 +13,7 @@ jobs:
         env:
           TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
           StateStoreContainerName: 'tfstate'
-          stateStoreFilename: 'environment.tfstate'
+          StateStoreFilename: 'environment.tfstate'
         outputs:
           resourceGroupName: ${{ steps.vnetInfo.outputs.resourceGroupName }}
           runnerSubnetId: ${{ steps.vnetInfo.outputs.runnerSubnetId }}
@@ -74,7 +74,7 @@ jobs:
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/aks'
         StateStoreContainerName: 'tfstate'
-        stateStoreFilename: 'runners.tfstate'
+        StateStoreFilename: 'runners.tfstate'
       steps:
             - uses: actions/checkout@v3
             
