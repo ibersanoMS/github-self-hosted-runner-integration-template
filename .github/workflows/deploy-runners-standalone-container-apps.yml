@@ -13,6 +13,12 @@ env:
 jobs:
     deploy-environment:
         runs-on: 'ubuntu-latest'
+        outputs:
+          acrName: ${{ steps.container-environment.outputs.acrName }}
+          resourceGroupName: ${{ steps.runner-infra.outputs.resourceGroupName }}
+          location: ${{ steps.runner-infra.outputs.location }}
+
+          environmentId: ${{ steps.container-environment.outputs.environmentId }}
         env:
           TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
         steps:
@@ -149,13 +155,13 @@ jobs:
 
             - name: Deploy Container App jobs
               run: |
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroup }} --environment ${{ needs.deploy-environment.outputs.steps.container-environment.environmentId }} \
+                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${{ needs.deploy-environment.outputs.environmentId }} \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
-                --image "${{ needs.deploy-environment.outputs.steps.container-environment.acrName }}.azurecr.io/mariner:2.0" \
+                --image "${{ needs.deploy-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
                 --polling-interval 30 \

@@ -9,3 +9,7 @@ output "vnetId" {
 output "resourceGroupName" {
   value = azurerm_resource_group.environmentRg.name
 }
+
+output "location" {
+  value = azurerm_resource_group.environmentRg.location
+}
