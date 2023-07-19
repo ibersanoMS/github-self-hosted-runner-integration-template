@@ -17,7 +17,6 @@ jobs:
           acrName: ${{ steps.container-environment.outputs.acrName }}
           resourceGroupName: ${{ steps.runner-infra.outputs.resourceGroupName }}
           location: ${{ steps.runner-infra.outputs.location }}
-
           environmentId: ${{ steps.container-environment.outputs.environmentId }}
         env:
           TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
@@ -74,51 +73,71 @@ jobs:
                  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
                  ARM_USE_OIDC: true
             
-            - name: Initialize Terraform
-              working-directory: 'src/infra/terraform/runners/container-apps'
-              run: |
-                  terraform init \
-                      -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
-                      -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
-                      -backend-config=container_name=${{ env.StateStoreContainerName }} \
-                      -backend-config=key=container_apps_environment.tfstate
-              env:
-                ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                ARM_USE_OIDC: true
-
-            - name: Plan Terraform
-              working-directory: 'src/infra/terraform/runners/container-apps'
-              run: terraform plan -out=tf_plan --var-file="terraform.tfvars" -var location="eastus" -var resourceGroupName=${{ steps.runner-infra.outputs.resourceGroupName }}
-              env:
-                ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                ARM_USE_OIDC: true
-                    
-            - name: Apply Terraform
-              id: container-environment
-              working-directory: 'src/infra/terraform/runners/container-apps'
-              run: |
-                terraform apply -auto-approve tf_plan
-                echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
-                echo environmentId=$(terraform output -raw environmentId) >> $GITHUB_OUTPUT
-              env:
-                ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                ARM_USE_OIDC: true
-    create-base-image:
+    create-container-apps-environment:
       needs: deploy-environment
+      runs-on: 'ubuntu-latest'
+      outputs:
+        acrName: ${{ steps.container-environment.outputs.acrName }}
+        environmentId: ${{ steps.container-environment.outputs.environmentId }}
+      env:
+        TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
+      steps:
+        - uses: actions/checkout@v3
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_wrapper: false
+        - name: Azure login
+          uses: azure/login@v1
+          with:
+            client-id: ${{secrets.AZURE_CLIENT_ID }}
+            subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID }}
+            tenant-id: ${{secrets.AZURE_TENANT_ID }}
+        - name: Initialize Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+              terraform init \
+                  -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
+                  -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
+                  -backend-config=container_name=${{ env.StateStoreContainerName }} \
+                  -backend-config=key=container_apps_environment.tfstate
+          env:
+            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            ARM_USE_OIDC: true
+
+        - name: Plan Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: terraform plan -out=tf_plan --var-file="terraform.tfvars" -var location="eastus" -var resourceGroupName=${{ steps.runner-infra.outputs.resourceGroupName }}
+          env:
+            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            ARM_USE_OIDC: true
+                
+        - name: Apply Terraform
+          id: container-environment
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+            terraform apply -auto-approve tf_plan
+            echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
+            echo environmentId=$(terraform output -raw environmentId) >> $GITHUB_OUTPUT
+          env:
+            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            ARM_USE_OIDC: true
+    create-base-image:
+      needs: create-container-apps-environment
       runs-on: 'ubuntu-latest'
       steps:
         - uses: actions/checkout@v3
         - name: Connect to Azure Container Registry (ACR)
           id: acrconnect
           run: |
-            echo "Retrieving access token from ${{ needs.deploy-environment.outputs.acrName }}"
-            TOKEN=$(az acr login -n ${{ needs.deploy-environment.outputs.acrName }} --expose-token)
+            echo "Retrieving access token from ${{ needs.create-container-apps-environment.outputs.acrName }}"
+            TOKEN=$(az acr login -n ${{ needs.create-container-apps-environment.outputs.acrName }} --expose-token)
 
             if [ -z "$TOKEN" ]
             then
@@ -137,12 +156,10 @@ jobs:
 
         - name: Container import to ACR
           run: |
-            az acr import --name ${{ needs.deploy-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
+            az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
     deploy-runners:
-      needs: [deploy-environment, create-base-image]
+      needs: [deploy-environment, create-base-image, create-container-apps-environment]
       runs-on: 'ubuntu-latest'
-      env:
-        TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
       steps:
             - uses: actions/checkout@v3
             
@@ -155,13 +172,13 @@ jobs:
 
             - name: Deploy Container App jobs
               run: |
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${{ needs.deploy-environment.outputs.environmentId }} \
+                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${{ needs.create-container-apps-environment.outputs.environmentId }} \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
-                --image "${{ needs.deploy-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
+                --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
                 --polling-interval 30 \
@@ -173,4 +190,4 @@ jobs:
                 --memory "4Gi" \
                 --secrets "personal-access-token=${{ secrets.GITHUB_PAT }}" \
                 --env-vars "GITHUB_PAT=secretref:personal-access-token" "REPO_URL=${{github.repositoryUrl}}" "REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token" \
-                --registry-server "${{  needs.deploy-environment.outputs.steps.container-environment.acrName }}.azurecr.io"
+                --registry-server "${{  needs.deploy-environment.outputs.acrName }}.azurecr.io"
