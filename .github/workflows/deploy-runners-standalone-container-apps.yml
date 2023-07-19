@@ -64,10 +64,10 @@ jobs:
               working-directory: ${{ env.TerraformWorkingDirectory }}
               run: |
                  terraform apply -auto-approve tf_plan
-                 echo runnerSubnetId=$(terraform output runnerSubnetId) >> $GITHUB_OUTPUT
-                 echo vnetId=$(terraform output vnetId) >> $GITHUB_OUTPUT
-                 echo resourceGroupName=$(terraform output resourceGroupName) >> $GITHUB_OUTPUT
-                 echo location=$(terraform output location) >> $GITHUB_OUTPUT
+                 echo runnerSubnetId=$(terraform output -raw runnerSubnetId) >> $GITHUB_OUTPUT
+                 echo vnetId=$(terraform output -raw vnetId) >> $GITHUB_OUTPUT
+                 echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
+                 echo location=$(terraform output -raw location) >> $GITHUB_OUTPUT
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
@@ -102,8 +102,8 @@ jobs:
               working-directory: 'src/infra/terraform/runners/container-apps'
               run: |
                 terraform apply -auto-approve tf_plan
-                echo acrName=$(terraform output acrName) >> $GITHUB_OUTPUT
-                echo environmentId=$(terraform output environmentId) >> $GITHUB_OUTPUT
+                echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
+                echo environmentId=$(terraform output -raw environmentId) >> $GITHUB_OUTPUT
               env:
                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                 ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
