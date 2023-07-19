@@ -118,7 +118,7 @@ jobs:
           id: acrconnect
           run: |
             echo "Retrieving access token from ${{ needs.deploy-environment.outputs.acrName }}"
-            TOKEN=$(az acr login -n $ACRNAME --expose-token)
+            TOKEN=$(az acr login -n ${{ needs.deploy-environment.outputs.acrName }} --expose-token)
 
             if [ -z "$TOKEN" ]
             then
