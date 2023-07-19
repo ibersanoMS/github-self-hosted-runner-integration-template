@@ -9,7 +9,7 @@ permissions:
 
 env:
     StateStoreContainerName: 'tfstate'
-    stateStoreFilename: 'runner-infra.tfstate'
+    StateStoreFilename: 'runner-infra.tfstate'
 jobs:
     deploy-environment:
         runs-on: 'ubuntu-latest'
