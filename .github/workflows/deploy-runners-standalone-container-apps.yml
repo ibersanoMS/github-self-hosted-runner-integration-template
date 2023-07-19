@@ -133,7 +133,7 @@ jobs:
           run: |
             az acr import --name ${{ needs.deploy-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
     deploy-runners:
-      needs: deploy-environment
+      needs: [deploy-environment, create-base-image]
       runs-on: 'ubuntu-latest'
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
