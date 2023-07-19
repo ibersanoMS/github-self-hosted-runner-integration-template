@@ -1,4 +1,4 @@
-name: GitHub Self-hosted runner deployment standalone container apps
+name: Container Apps Standalone
         
 on:
     workflow_dispatch:
