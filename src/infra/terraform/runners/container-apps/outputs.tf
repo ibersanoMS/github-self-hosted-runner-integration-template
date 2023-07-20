@@ -4,10 +4,6 @@ output "acrName" {
 
 output "environmentName" {
   value = azurerm_container_app_environment.containerAppsEnvironment.name
-}
-
-output "environmentName" {
-  value = azurerm_container_app_environment.containerAppsEnvironment.name
   sensitive = true
 }
 
