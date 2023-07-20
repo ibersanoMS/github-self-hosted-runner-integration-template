@@ -122,7 +122,7 @@ jobs:
           run: |
             terraform apply -auto-approve tf_plan
             echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
-            ENV_ID=`terraform output -raw environmentId) |  base64 -w 0`
+            ENV_ID=`terraform output -raw environmentId |  base64 -w 0`
             echo environmentId=$ENV_ID >> $GITHUB_OUTPUT
           env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
