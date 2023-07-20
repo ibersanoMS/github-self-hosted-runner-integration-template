@@ -143,30 +143,30 @@ jobs:
         - name: Connect to Azure Container Registry (ACR)
           id: acrconnect
           run: |
+            echo "Retrieving access token from ${{ needs.create-container-apps-environment.outputs.acrName }}"
+            TOKEN=$(az acr login -n ${{ needs.create-container-apps-environment.outputs.acrName }} --expose-token)
+
+            if [ -z "$TOKEN" ]
+            then
+              echo "ACR Token was not retrieved successfully"
+              exit 1
+            fi
+
+            ACRTOKEN=$(echo $TOKEN | jq -r ".accessToken")
+            LOGINSERVER=$(echo $TOKEN | jq -r ".loginServer")
+
+            echo "ACR Login Server: $LOGINSERVER"
+            echo "::set-output name=loginServer::$LOGINSERVER"
+
+            echo "Passing token as stdin to docker login"
+            echo $ACRTOKEN | docker login $LOGINSERVER -u 00000000-0000-0000-0000-000000000000 --password-stdin
+        - name: Container import to ACR
+          run: |
             EXISTS=`az acr repository show -n ${{ needs.create-container-apps-environment.outputs.acrName }} --image mariner:2.0 | jq '.name'`
             if [ $EXISTS -ne "2.0" ]
             then
-                    echo "Retrieving access token from ${{ needs.create-container-apps-environment.outputs.acrName }}"
-                    TOKEN=$(az acr login -n ${{ needs.create-container-apps-environment.outputs.acrName }} --expose-token)
-
-                    if [ -z "$TOKEN" ]
-                    then
-                      echo "ACR Token was not retrieved successfully"
-                      exit 1
-                    fi
-
-                    ACRTOKEN=$(echo $TOKEN | jq -r ".accessToken")
-                    LOGINSERVER=$(echo $TOKEN | jq -r ".loginServer")
-
-                    echo "ACR Login Server: $LOGINSERVER"
-                    echo "::set-output name=loginServer::$LOGINSERVER"
-
-                    echo "Passing token as stdin to docker login"
-                    echo $ACRTOKEN | docker login $LOGINSERVER -u 00000000-0000-0000-0000-000000000000 --password-stdin
+                az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
             fi
-        - name: Container import to ACR
-          run: |
-            az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
     deploy-runners:
       needs: [deploy-environment, create-base-image, create-container-apps-environment]
       runs-on: 'ubuntu-latest'
