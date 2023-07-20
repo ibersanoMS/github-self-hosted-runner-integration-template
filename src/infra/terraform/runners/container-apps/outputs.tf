@@ -8,6 +8,7 @@ output "environmentName" {
 
 output "environmentId" {
   value = azurerm_container_app_environment.containerAppsEnvironment.id
+  sensitive = true
 }
 
 output "resourceGroupName" {
