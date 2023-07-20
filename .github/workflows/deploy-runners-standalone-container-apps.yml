@@ -144,7 +144,7 @@ jobs:
           id: acrconnect
           run: |
             EXISTS=`az acr repository show -n ${{ needs.create-container-apps-environment.outputs.acrName }} --image mariner:2.0 | jq '.name'`
-            if [ $EXISTS -eq "2.0" ]
+            if [ $EXISTS -ne "2.0" ]
             then
                     echo "Retrieving access token from ${{ needs.create-container-apps-environment.outputs.acrName }}"
                     TOKEN=$(az acr login -n ${{ needs.create-container-apps-environment.outputs.acrName }} --expose-token)
