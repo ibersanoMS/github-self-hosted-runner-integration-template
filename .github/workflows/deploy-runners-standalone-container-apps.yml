@@ -122,7 +122,8 @@ jobs:
           run: |
             terraform apply -auto-approve tf_plan
             echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
-            echo environmentId=$(terraform output -raw environmentId) >> $GITHUB_OUTPUT
+            ENV_ID=$(terraform output -raw environmentId) |  base64 -w 0
+            echo environmentId=$ENV_ID >> $GITHUB_OUTPUT
           env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
@@ -178,7 +179,8 @@ jobs:
 
             - name: Deploy Container App jobs
               run: |
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${{ needs.create-container-apps-environment.outputs.environmentId }} \
+                ENV_ID=`echo -n ${{ needs.create-container-apps-environment.outputs.environmentId }} | base64 --decode`
+                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $ENV_ID \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
