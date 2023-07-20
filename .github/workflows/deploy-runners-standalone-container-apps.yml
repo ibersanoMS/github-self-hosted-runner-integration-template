@@ -182,7 +182,7 @@ jobs:
             - name: Deploy Container App jobs
               run: |
                 CAE=$(az containerapp show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv)
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
+                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${CAE} \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
