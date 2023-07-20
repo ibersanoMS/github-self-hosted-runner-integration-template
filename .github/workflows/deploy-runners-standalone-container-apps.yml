@@ -78,7 +78,7 @@ jobs:
       runs-on: 'ubuntu-latest'
       outputs:
         acrName: ${{ steps.container-environment.outputs.acrName }}
-        environmentId: ${{ steps.container-environment.outputs.environmentId }}
+        environmentName: ${{ steps.container-environment.outputs.environmentName }}
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
       steps:
@@ -122,7 +122,7 @@ jobs:
           run: |
             terraform apply -auto-approve tf_plan
             echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
-            echo environmentId=$(terraform output -raw environmentId) >> $GITHUB_OUTPUT
+            echo environmentName=$(terraform output -raw environmentName) >> $GITHUB_OUTPUT
           env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
@@ -181,7 +181,8 @@ jobs:
 
             - name: Deploy Container App jobs
               run: |
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment ${{ needs.create-container-apps-environment.outputs.environmentId }} \
+                CAE=$(az container app show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv)
+                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \

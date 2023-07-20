@@ -6,8 +6,8 @@ output "environmentName" {
   value = azurerm_container_app_environment.containerAppsEnvironment.name
 }
 
-output "environmentId" {
-  value = azurerm_container_app_environment.containerAppsEnvironment.id
+output "environmentName" {
+  value = azurerm_container_app_environment.containerAppsEnvironment.name
   sensitive = true
 }
 
