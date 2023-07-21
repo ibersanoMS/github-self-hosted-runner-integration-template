@@ -178,7 +178,11 @@ jobs:
                 client-id: ${{secrets.AZURE_CLIENT_ID }}
                 subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID }}
                 tenant-id: ${{secrets.AZURE_TENANT_ID }}
-
+            - uses: azure/docker-login@v1
+              with:
+                    login-server: '${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io'
+                    username: ${{ needs.create-container-apps-environment.outputs.acrName }}
+                    password: ${{ secrets.ACR_PWD }}
             - name: Deploy Container App jobs
               run: |
                 CAE=`az containerapp env show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
