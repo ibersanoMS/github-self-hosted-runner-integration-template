@@ -201,4 +201,4 @@ jobs:
                 --memory "4Gi" \
                 --secrets "personal-access-token=${{ secrets.GITHUB_PAT }}" \
                 --env-vars "GITHUB_PAT=secretref:personal-access-token" "REPO_URL=${{github.repositoryUrl}}" "REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token" \
-                --registry-server "${{  needs.deploy-environment.outputs.acrName }}.azurecr.io"
+                --registry-server "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io"
