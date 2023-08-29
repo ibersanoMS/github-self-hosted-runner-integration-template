@@ -137,12 +137,9 @@ jobs:
               working-directory: 'src/manifests'
               run: |
                 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml  
-                # helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
-                # helm upgrade --install --version 0.23.3 --namespace actions-runner-system --create-namespace --wait actions-runner-controller actions-runner-controller/actions-runner-controller --set "githubWebhookServer.enabled=true,service.type=NodePort,githubWebhookServer.ports[0].nodePort=33080"
                 kubectl apply -f https://github.com/actions/actions-runner-controller/releases/download/v0.22.0/actions-runner-controller.yaml --server-side
                 if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager' ]; then
                         kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 fi
                 sed -i '/repository:/c\      repository: ${{github.repository }}' runnerdeployment.yaml
-                echo runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
