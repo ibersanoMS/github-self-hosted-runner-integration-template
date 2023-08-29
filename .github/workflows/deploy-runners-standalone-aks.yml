@@ -143,6 +143,6 @@ jobs:
                 if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager' ]; then
                         kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 fi
-                sed -i '/repository:/c\    repository: ${{github.repository }}' runnerdeployment.yaml
+                sed -i '/repository:/c\      repository: ${{github.repository }}' runnerdeployment.yaml
                 echo runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
