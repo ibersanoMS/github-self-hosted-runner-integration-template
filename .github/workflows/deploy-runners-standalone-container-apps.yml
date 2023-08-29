@@ -178,16 +178,17 @@ jobs:
                 client-id: ${{secrets.AZURE_CLIENT_ID }}
                 subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID }}
                 tenant-id: ${{secrets.AZURE_TENANT_ID }}
-
             - name: Deploy Container App jobs
               run: |
-                CAE=$(az container app show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv)
+                CAE=`az containerapp env show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
                 az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
+                --registry-username "${{ needs.create-container-apps-environment.outputs.acrName }}" \
+                --registry-password "${{ secrets.ACR_PWD }}" \
                 --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
@@ -200,4 +201,4 @@ jobs:
                 --memory "4Gi" \
                 --secrets "personal-access-token=${{ secrets.GITHUB_PAT }}" \
                 --env-vars "GITHUB_PAT=secretref:personal-access-token" "REPO_URL=${{github.repositoryUrl}}" "REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token" \
-                --registry-server "${{  needs.deploy-environment.outputs.acrName }}.azurecr.io"
+                --registry-server "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io"

@@ -3,5 +3,5 @@ resource "azurerm_container_registry" "runnerContainerRegistry" {
   resource_group_name      = var.resourceGroupName
   location                 = var.location
   sku                      = "Standard"
-  admin_enabled            = false
+  admin_enabled            = true
 }
