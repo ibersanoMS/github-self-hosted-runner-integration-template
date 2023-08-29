@@ -14,7 +14,7 @@ resource "azurerm_kubernetes_cluster" "akscluster" {
   name                      = var.clusterName
   location                  = var.location
   resource_group_name       = data.terraform_remote_state.environment.outputs.resourceGroupName
-  kubernetes_version        = "1.25.5"
+  kubernetes_version        = "1.27.1"
   dns_prefix                = var.clusterName
   identity {
     type = "SystemAssigned"
