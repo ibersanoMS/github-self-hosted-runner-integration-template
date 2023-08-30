@@ -48,7 +48,7 @@ jobs:
             - name: Apply Terraform
               working-directory: 'src/infra/terraform/runners/${{ vars.runnerType }}'
               run: |
-                    terraform destroy -auto-approve .runner_public_ip
+                    terraform destroy -auto-approve
               env:
                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                 ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
