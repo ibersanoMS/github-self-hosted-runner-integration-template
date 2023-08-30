@@ -9,9 +9,7 @@ permissions:
 env:
     TerraformWorkingDirectory: 'src/infra/terraform/runners'
     StateStoreContainerName: 'tfstate'
-    stateStoreFilename: 'runners.tfstate'
-    destroyAll: 'false'
-    destroyRunner: 'true'
+    StateStoreFilename: 'runners.tfstate'
 jobs:
     destroy-runners:
         runs-on: 'ubuntu-latest'
