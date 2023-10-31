@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cert-issuer
+  labels:
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ibersano@microsoft.com
+    privateKeySecretRef:
+      name: cert-manager-selfhosted
+    solvers:
+    - http01:
+        ingress:
+          class: nginx

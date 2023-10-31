@@ -54,6 +54,15 @@ resource "azurerm_kubernetes_cluster_node_pool" "linux_user_pool" {
   zones                 = ["1", "2", "3"]
 }
 
+resource "azurerm_public_ip" "ingressIP" {
+  name = "clusterPublicIP"
+  location = var.location
+  allocation_method = "Static"
+  sku = "Standard"
+  resource_group_name = azurerm_kubernetes_cluster.akscluster.node_resource_group
+  domain_name_label = "ingress-selfhosted"
+}
+
 # Outputs
 output "aks_id" {
   value = azurerm_kubernetes_cluster.akscluster.id
@@ -61,4 +70,8 @@ output "aks_id" {
 
 output "node_pool_rg" {
   value = azurerm_kubernetes_cluster.akscluster.node_resource_group
+}
+
+output "publicIP" {
+  value = azurerm_public_ip.ingressIP.ip_address
 }

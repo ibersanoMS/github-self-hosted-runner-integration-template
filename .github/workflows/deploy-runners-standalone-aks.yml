@@ -120,6 +120,7 @@ jobs:
                  terraform apply -auto-approve tf_plan
                  echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
                  echo clusterName=$(terraform output -raw clusterName) >> $GITHUB_OUTPUT
+                 echo publicIP=$(terraform output -raw publicIP) >> $GITHUB_OUTPUT
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
@@ -133,13 +134,39 @@ jobs:
                 cluster-name: ${{ steps.clusterInfo.outputs.clusterName }}
                 resource-group: ${{ steps.clusterInfo.outputs.resourceGroupName }}
 
+            - name: Setup ingress
+              working-directory: 'src/manifests'
+              run: |
+                NAMESPACE=ingress-selfhosted
+                DNS_LABEL=ingress-selfhosted
+                STATIC_IP=${{ steps.clusterInfo.outputs.publicIP }}
+
+                kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml  
+
+                helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+                helm repo update
+                
+                helm install ingress-nginx ingress-nginx/ingress-nginx \
+                  --create-namespace \
+                  --namespace $NAMESPACE \
+                  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-dns-label-name"=$DNS_LABEL \
+                  --set controller.service.loadBalancerIP=$STATIC_IP \
+                  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
+                
+                kubectl apply -f certissuer.yaml
+
             - name: Install runner 
               working-directory: 'src/manifests'
               run: |
-                kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml  
                 kubectl apply -f https://github.com/actions/actions-runner-controller/releases/download/v0.22.0/actions-runner-controller.yaml --server-side
+                helm upgrade --install --namespace actions-runner-system --create-namespace \
+                            --wait actions-runner-controller actions-runner-controller/actions-runner-controller \
+                            --set "githubWebhookServer.enabled=true"
+                
+                kubectl apply -n actions-runner-system -f ingress.yaml
+
                 if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager' ]; then
                         kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 fi
-                sed -i '/repository:/c\      repository: ${{github.repository }}' runnerdeployment.yaml
+                sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
