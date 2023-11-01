@@ -165,15 +165,16 @@ jobs:
             - name: Install runner 
               working-directory: 'src/manifests'
               run: |
-                kubectl apply -f https://github.com/actions/actions-runner-controller/releases/download/v0.22.0/actions-runner-controller.yaml --server-side
+                helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
+                helm upgrade --install --namespace actions-runner-system --create-namespace\
+                          --set=authSecret.create=true\
+                          --set=authSecret.github_token=${{ secrets.GH_PAT }}\
+                          --wait actions-runner-controller actions-runner-controller/actions-runner-controller
+                          
                 helm upgrade --install --namespace actions-runner-system --create-namespace \
                             --wait actions-runner-controller actions-runner-controller/actions-runner-controller \
                             --set "githubWebhookServer.enabled=true"
                 
                 kubectl apply -n actions-runner-system -f ingress.yaml
-
-                if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager' ]; then
-                        kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
-                fi
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
