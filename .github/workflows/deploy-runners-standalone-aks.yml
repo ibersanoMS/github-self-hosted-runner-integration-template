@@ -182,6 +182,6 @@ jobs:
                   kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 fi
 
-                sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment-single.yaml
+                sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
                 kubectl apply -f hra.yaml
