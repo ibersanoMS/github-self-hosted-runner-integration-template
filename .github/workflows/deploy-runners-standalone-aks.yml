@@ -176,8 +176,6 @@ jobs:
                             --set "githubWebhookServer.enabled=true"
                 
                 kubectl apply -n actions-runner-system -f ingress.yaml
-                if [ $(kubectl get secret controller-manager -n actions-runner-system --output='name') != 'secret/controller-manager' ]; then
-                        kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
-                fi
+                kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
