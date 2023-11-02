@@ -165,6 +165,10 @@ jobs:
             - name: Install runner 
               working-directory: 'src/manifests'
               run: |
+                if [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') == 'secrets/controller-manager' ]; then
+                  kubectl delete secret controller-manager -n actions-runner-system
+                fi
+
                 helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
                 helm upgrade --install --namespace actions-runner-system --create-namespace \
                           --set=authSecret.create=true \
@@ -178,10 +182,8 @@ jobs:
                 kubectl apply -n actions-runner-system -f ingress.yaml
                 if [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') != 'secrets/controller-manager' ]; then
                   kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
-                elif [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') == 'secrets/controller-manager' ]; then
-                  kubectl delete secret controller-manager -n actions-runner-system
-                  kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                 fi
+                
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment-single.yaml
                 kubectl apply -f runnerdeployment.yaml
                 kubectl apply -f hra.yaml
