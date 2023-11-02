@@ -1,16 +1,8 @@
 apiVersion: actions.summerwind.dev/v1alpha1
-kind: HorizontalRunnerAutoscaler
+kind: RunnerDeployment
 metadata:
-  name: runner-hpa
+  name: example-runnerdeployment
 spec:
-  minReplicas: 1
-  maxReplicas: 10
-  scaleTargetRef:
-    kind: RunnerDeployment
-    # # In case the scale target is RunnerSet:
-    # kind: RunnerSet
-    name: example-runnerdeployment
-  scaleUpTriggers:
-    - githubEvent:
-        workflowJob: {}
-      duration: "30m"
+  template:
+    spec:
+      repository: <Repository Name>
