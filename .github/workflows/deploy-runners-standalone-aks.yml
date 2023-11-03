@@ -16,7 +16,6 @@ jobs:
           StateStoreFilename: 'environment.tfstate'
         outputs:
           resourceGroupName: ${{ steps.vnetInfo.outputs.resourceGroupName }}
-          runnerSubnetId: ${{ steps.vnetInfo.outputs.runnerSubnetId }}
         steps:
             - uses: actions/checkout@v3
             
@@ -61,7 +60,6 @@ jobs:
               run: |
                  terraform apply -auto-approve tf_plan
                  echo vnetId=$(terraform output vnetId) >> $GITHUB_OUTPUT
-                 echo runnerSubnetId=$(terraform output runnerSubnetId) >> $GITHUB_OUTPUT
                  echo resourceGroupName=$(terraform output resourceGroupName) >> $GITHUB_OUTPUT
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -147,7 +145,8 @@ jobs:
                 helm upgrade --install cert-manager jetstack/cert-manager \
                   --create-namespace \
                   --namespace cert-manager \
-                  --version v1.8.2 \
+                  --values Charts/values.yaml \
+                  --version {{ .Values.certManagerVersion }} \
                   --set installCRDs=true
                   
                 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -162,7 +161,7 @@ jobs:
                 
                 kubectl apply -n cert-manager -f certissuer.yaml
 
-            - name: Install runner 
+            - name: Install Actions Runner Controller 
               working-directory: 'src/manifests'
               run: |
                 helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
@@ -174,12 +173,14 @@ jobs:
                             --set "githubWebhookServer.enabled=true"
                 
                 kubectl apply -n actions-runner-system -f ingress.yaml
-                if [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') != 'secret/controller-manager' ]; then
-                  echo "Secret does not exist"
-                  kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
-                elif [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') == 'secret/controller-manager' ]; then
+                if [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') == 'secret/controller-manager' ]; then
                   kubectl delete secret controller-manager -n actions-runner-system
                   kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
+                  echo "Secret updated."
+                else
+                  echo "Secret does not exist. Creating secret..."
+                  kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
+                  echo "Secret created."
                 fi
 
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml

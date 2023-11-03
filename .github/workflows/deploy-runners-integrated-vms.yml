@@ -1,0 +1,15 @@
+name: VMs Integrated
+on:
+    workflow_dispatch:
+
+permissions:
+    id-token: write
+    contents: read
+
+env:
+    TerraformWorkingDirectory: 'src/infra/terraform/runners'
+    StateStoreContainerName: 'tfstate'
+    StateStoreFilename: 'runners.tfstate'
+jobs:
+    deploy-runners:
+        runs-on: 'ubuntu-latest'

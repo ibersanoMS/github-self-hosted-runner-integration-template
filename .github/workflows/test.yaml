@@ -12,4 +12,4 @@ jobs:
         steps:
             - name: Test
               run: |
-                echo "Hey! I worked"
+                echo "Hey! I ran on a self-hosted runner!"

@@ -1,4 +1,4 @@
-name: GitHub Self-hosted runner deployment standalone vms
+name: VM Standalone
         
 on:
     workflow_dispatch:
