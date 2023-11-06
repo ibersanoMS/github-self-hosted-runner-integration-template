@@ -4,7 +4,7 @@ data "terraform_remote_state" "environment" {
   config = {
     storage_account_name = var.stateSaName
     container_name       = var.stateSaContainerName
-    key                  = "runner-infra.tfstate"
+    key                  = "environment.tfstate"
     resource_group_name  = var.stateSaRg
   }
 }

@@ -6,68 +6,127 @@ on:
 permissions:
     id-token: write
     contents: read
-env:
-    TerraformWorkingDirectory: 'src/infra/terraform/runners'
-    StateStoreContainerName: 'tfstate'
-    stateStoreFilename: 'runners.tfstate'
 
 jobs:
-    deploy:
-        runs-on: 'ubuntu-latest'
-        steps:
-            - uses: actions/checkout@v3
+  deploy-environment:
+    runs-on: 'ubuntu-latest'
+    env:
+      TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
+      StateStoreContainerName: 'tfstate'
+      StateStoreFilename: 'environment.tfstate'
+    outputs:
+      resourceGroupName: ${{ steps.vnetInfo.outputs.resourceGroupName }}
+    steps:
+        - uses: actions/checkout@v3
+        
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_wrapper: false
+        
+        - name: Azure login
+          uses: azure/login@v1
+          with:
+            client-id: ${{secrets.AZURE_CLIENT_ID }}
+            subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID }}
+            tenant-id: ${{secrets.AZURE_TENANT_ID }}
+        
+        - name: Initialize Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+              terraform init \
+                  -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
+                  -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
+                  -backend-config=container_name=${{ env.StateStoreContainerName }} \
+                  -backend-config=key=${{ env.StateStoreFilename }}
+          env:
+           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+           ARM_USE_OIDC: true
+        
+        - name: Plan Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: terraform plan -out=tf_plan --var-file="terraform.tfvars"
+          env:
+             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+             ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+             ARM_USE_OIDC: true
+             
+        - name: Apply Terraform
+          id: vnetInfo
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+             terraform apply -auto-approve tf_plan
+             echo vnetId=$(terraform output vnetId) >> $GITHUB_OUTPUT
+             echo resourceGroupName=$(terraform output resourceGroupName) >> $GITHUB_OUTPUT
+          env:
+             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+             ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+             ARM_USE_OIDC: true
+  deploy-runners:
+    needs: deploy-environment
+    runs-on: 'ubuntu-latest'
+    env:
+      TerraformWorkingDirectory: 'src/infra/terraform/runners/vms'
+      StateStoreContainerName: 'tfstate'
+      StateStoreFilename: 'runners.tfstate'
+    steps:
+        - uses: actions/checkout@v3
 
-            - name: Generate registration token
-              id: token
-              run: |
-                token=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GH_PAT }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token)
-                
-                regToken=$(echo $token | jq '.token' |tr -d \")
-                echo registrationToken=$regToken >> $GITHUB_OUTPUT
+        - name: Generate registration token
+          id: token
+          run: |
+            token=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GH_PAT }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token)
             
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v2
-              with:
-                terraform_wrapper: false
+            regToken=$(echo $token | jq '.token' |tr -d \")
+            echo registrationToken=$regToken >> $GITHUB_OUTPUT
+        
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_wrapper: false
+        
+        - name: Azure login
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        
+        - name: Initialize Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+              terraform init \
+                  -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
+                  -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
+                  -backend-config=container_name=${{ env.StateStoreContainerName }} \
+                  -backend-config=key=${{ env.StateStoreFilename }}
+          env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+
+        - name: Plan Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: terraform plan -out=tf_plan -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }} -var selfHostedRunnerToken=${{ steps.token.outputs.registrationToken }} -var selfHostedRunnerName="github-runner-${{github.run_id}} -var githubRepoUrl="https://github.com/${{github.repository}}"
+          env:
+            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            ARM_USE_OIDC: true
             
-            - name: Azure login
-              uses: azure/login@v1
-              with:
-                client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            
-            - name: Initialize Terraform
-              working-directory: ${{ env.TerraformWorkingDirectory }}
-              run: |
-                  terraform init \
-                      -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
-                      -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
-                      -backend-config=container_name=${{ env.StateStoreContainerName }} \
-                      -backend-config=key=${{ env.StateStoreFilename }}
-              env:
-               ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-               ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-               ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-               ARM_USE_OIDC: true
-            
-            - name: Plan Terraform
-              working-directory: ${{ env.TerraformWorkingDirectory }}
-              run: terraform plan -out=tf_plan --var-file="terraform.tfvars" -var selfHostedRunnerToken=${{ steps.token.outputs.registrationToken }} -var selfHostedRunnerName="github-runner-${{github.run_id}}"
-              env:
-                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                 ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                 ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                 ARM_USE_OIDC: true
-                 
-            - name: Apply Terraform
-              working-directory: ${{ env.TerraformWorkingDirectory }}
-              run: |
-                 terraform apply -auto-approve tf_plan
-                 echo vnetName=$(terraform output vnetName) >> $GITHUB_OUTPUT
-                 echo vnetId=$(terraform output vnetId) >> $GITHUB_OUTPUT
-              env:
-                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                 ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                 ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                 ARM_USE_OIDC: true
+        - name: Apply Terraform
+          working-directory: ${{ env.TerraformWorkingDirectory }}
+          run: |
+            terraform apply -auto-approve tf_plan
+            echo vnetName=$(terraform output vnetName) >> $GITHUB_OUTPUT
+            echo vnetId=$(terraform output vnetId) >> $GITHUB_OUTPUT
+          env:
+            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            ARM_USE_OIDC: true  
