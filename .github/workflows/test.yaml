@@ -1,0 +1,15 @@
+name: Test workflow
+on:
+    workflow_dispatch:
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    test:
+        runs-on: 'self-hosted'
+        steps:
+            - name: Test
+              run: |
+                echo "Hey! I ran on a self-hosted runner!"

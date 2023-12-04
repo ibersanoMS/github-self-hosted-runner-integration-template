@@ -1,0 +1,24 @@
+#cloud-config
+
+write_files:
+  - content: |
+      #!/bin/bash
+      mkdir actions-runner 
+      cd actions-runner
+
+      # Download the latest runner package
+
+      runner_file="actions-runner-${runnerPlatform}-${runnerArch}-${latestVersion}.tar.gz"
+      runner_url="https://github.com/actions/runner/releases/download/v${latestVersion}/"
+      runner_url+="$runner_file"
+
+      curl -o "$runner_file" -L "$runner_url"
+      tar xzf ./"$runner_file"
+
+      export RUNNER_ALLOW_RUNASROOT="1"
+      ./config.sh --url "${githubRepoUrl}" --token "${selfHostedRunnerToken}"
+      ./run.sh
+    path: /tmp/configScript.sh
+runcmd:
+  - echo "Starting the configuration script..."
+  - bash /tmp/configScript.sh
