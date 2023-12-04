@@ -163,6 +163,14 @@ jobs:
             - name: Install Actions Runner Controller 
               working-directory: 'src/manifests'
               run: |
+                
+                helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
+                helm upgrade --install --namespace actions-runner-system --create-namespace \
+                          --wait actions-runner-controller actions-runner-controller/actions-runner-controller
+                          
+                helm upgrade --install --namespace actions-runner-system --create-namespace \
+                            --wait actions-runner-controller actions-runner-controller/actions-runner-controller \
+                            --set "githubWebhookServer.enabled=true"
                 if [ $(kubectl get secret -n actions-runner-system controller-manager --output='name') == 'secret/controller-manager' ]; then
                   kubectl delete secret controller-manager -n actions-runner-system
                   kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
@@ -172,14 +180,6 @@ jobs:
                   kubectl create secret generic controller-manager -n actions-runner-system --from-literal=github_token=${{ secrets.GH_PAT }}
                   echo "Secret created."
                 fi
-                helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
-                helm upgrade --install --namespace actions-runner-system --create-namespace \
-                          --wait actions-runner-controller actions-runner-controller/actions-runner-controller
-                          
-                helm upgrade --install --namespace actions-runner-system --create-namespace \
-                            --wait actions-runner-controller actions-runner-controller/actions-runner-controller \
-                            --set "githubWebhookServer.enabled=true"
-                
                 kubectl apply -n actions-runner-system -f ingress.yaml
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
                 kubectl apply -f runnerdeployment.yaml
