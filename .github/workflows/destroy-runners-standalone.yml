@@ -66,10 +66,18 @@ jobs:
                 regToken=$(echo $token | jq '.token' |tr -d \")
                 echo registrationToken=$regToken >> $GITHUB_OUTPUT
 
+            - name: Uninstall Actions Runner Controller
+              if: ${{ vars.RUNNERTYPE == 'aks' }} 
+              working-directory: 'src/manifests'
+              run: |
+                kubectl delete -f hra.yaml
+                kubectl delete -f runnerdeployment.yaml
+
             - name: Remove runner
               if: ${{ vars.RUNNERTYPE == 'vm' }}
               run: |
                 az vm run-command invoke -g ${{ steps.init.outputs.resourceGroupName }} -n ${{ steps.init.outputs.vmName }} --command-id RunShellScript --scripts "cd /actions-runner && export RUNNER_ALLOW_RUNASROOT=\"1\" && ./config.sh remove --token ${{ steps.token.outputs.registrationToken }}"
+             
             - name: Apply Terraform
               working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
               run: |
