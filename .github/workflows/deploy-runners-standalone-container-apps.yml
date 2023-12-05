@@ -181,7 +181,7 @@ jobs:
                 tenant-id: ${{secrets.AZURE_TENANT_ID }}
             - name: Deploy Container App jobs
               run: |
-                echo "${{ needs.create-container-apps-environment.outputs.userAssignedIdentityId }}"
+                identity=`az identity show -n "containerAppsJobIdentity" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
                 CAE=`az containerapp env show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
                 az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
                 --trigger-type Event \
@@ -189,7 +189,7 @@ jobs:
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
-                --registry-identity "${{ needs.create-container-apps-environment.outputs.userAssignedIdentityId }}" \
+                --registry-identity $identity \
                 --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
