@@ -10,3 +10,7 @@ output "environmentName" {
 output "resourceGroupName" {
   value = var.resourceGroupName
 }
+
+output "userAssignedIdentityId" {
+  value = azurerm_user_assigned_identity.containerAppsJobIdentity.id
+}
