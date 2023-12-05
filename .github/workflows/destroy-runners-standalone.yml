@@ -39,6 +39,7 @@ jobs:
                         -backend-config=container_name=${{ env.StateStoreContainerName }} \
                         -backend-config=key=${{ env.StateStoreFilename }}
                     echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
+                    echo clusterName=$(terraform output -raw clusterName) >> $GITHUB_OUTPUT
                     echo vmName=$(terraform output -raw vmName) >> $GITHUB_OUTPUT
               env:
                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -65,6 +66,13 @@ jobs:
                 
                 regToken=$(echo $token | jq '.token' |tr -d \")
                 echo registrationToken=$regToken >> $GITHUB_OUTPUT
+
+            # Set the target Azure Kubernetes Service (AKS) cluster. 
+            - name: Set AKS context
+              uses: azure/aks-set-context@v3
+              with:
+                cluster-name: ${{ steps.init.outputs.clusterName }}
+                resource-group: ${{ steps.init.outputs.resourceGroupName }}
 
             - name: Uninstall Actions Runner Controller
               if: ${{ vars.RUNNERTYPE == 'aks' }} 
