@@ -77,6 +77,8 @@ jobs:
         environmentName: ${{ steps.container-environment.outputs.environmentName }}
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
+        StateStoreContainerName: 'tfstate'
+        StateStoreFilename: 'container_apps_environment.tfstate'
       steps:
         - uses: actions/checkout@v3
         - name: Setup Terraform
@@ -96,7 +98,7 @@ jobs:
                   -backend-config=resource_group_name=${{ vars.STATE_RESOURCE_GROUP_NAME}} \
                   -backend-config=storage_account_name=${{ vars.STORAGE_ACCOUNT_NAME }} \
                   -backend-config=container_name=${{ env.StateStoreContainerName }} \
-                  -backend-config=key=container_apps_environment.tfstate
+                  -backend-config=key=${{ env.StateStoreFilename }}
           env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
