@@ -51,7 +51,8 @@ jobs:
               if: ${{ vars.RUNNERTYPE == 'aks' }}
               working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
               run: |
-                terraform state rm azurerm_public_ip.ingressIP
+                echo "Remove for debugging"
+                # terraform state rm azurerm_public_ip.ingressIP
               env:
                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                 ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
