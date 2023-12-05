@@ -15,10 +15,8 @@ jobs:
           StateStoreContainerName: 'tfstate'
           StateStoreFilename: 'environment.tfstate'
         outputs:
-          acrName: ${{ steps.container-environment.outputs.acrName }}
           resourceGroupName: ${{ steps.runner-infra.outputs.resourceGroupName }}
           location: ${{ steps.runner-infra.outputs.location }}
-          environmentId: ${{ steps.container-environment.outputs.environmentId }}
 
         steps:
             - uses: actions/checkout@v3
@@ -63,6 +61,9 @@ jobs:
               working-directory: ${{ env.TerraformWorkingDirectory }}
               run: |
                  terraform apply -auto-approve tf_plan
+                 echo location=$(terraform output -raw location) >> $GITHUB_OUTPUT
+                 echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
+
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
