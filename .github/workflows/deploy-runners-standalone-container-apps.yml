@@ -7,19 +7,19 @@ permissions:
     id-token: write
     contents: read
 
-env:
-    StateStoreContainerName: 'tfstate'
-    StateStoreFilename: 'runner-infra.tfstate'
 jobs:
     deploy-environment:
         runs-on: 'ubuntu-latest'
+        env:
+          TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
+          StateStoreContainerName: 'tfstate'
+          StateStoreFilename: 'environment.tfstate'
         outputs:
           acrName: ${{ steps.container-environment.outputs.acrName }}
           resourceGroupName: ${{ steps.runner-infra.outputs.resourceGroupName }}
           location: ${{ steps.runner-infra.outputs.location }}
           environmentId: ${{ steps.container-environment.outputs.environmentId }}
-        env:
-          TerraformWorkingDirectory: 'src/infra/terraform/runner-infra'
+
         steps:
             - uses: actions/checkout@v3
             
@@ -63,10 +63,6 @@ jobs:
               working-directory: ${{ env.TerraformWorkingDirectory }}
               run: |
                  terraform apply -auto-approve tf_plan
-                 echo runnerSubnetId=$(terraform output -raw runnerSubnetId) >> $GITHUB_OUTPUT
-                 echo vnetId=$(terraform output -raw vnetId) >> $GITHUB_OUTPUT
-                 echo resourceGroupName=$(terraform output -raw resourceGroupName) >> $GITHUB_OUTPUT
-                 echo location=$(terraform output -raw location) >> $GITHUB_OUTPUT
               env:
                  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
                  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
