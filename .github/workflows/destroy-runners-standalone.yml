@@ -47,18 +47,6 @@ jobs:
                 ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
                 ARM_USE_OIDC: true
 
-            - name: Remove Public IP
-              if: ${{ vars.RUNNERTYPE == 'aks' }}
-              working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
-              run: |
-                echo "Remove for debugging"
-                # terraform state rm azurerm_public_ip.ingressIP
-              env:
-                ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-                ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
-                ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-                ARM_USE_OIDC: true
-
             - name: Generate remove token
               if: ${{ vars.RUNNERTYPE == 'vm' }}
               id: token
@@ -70,6 +58,7 @@ jobs:
 
             # Set the target Azure Kubernetes Service (AKS) cluster. 
             - name: Set AKS context
+              if: ${{ vars.RUNNERTYPE == 'aks' }} 
               uses: azure/aks-set-context@v3
               with:
                 cluster-name: ${{ steps.init.outputs.clusterName }}
@@ -86,7 +75,18 @@ jobs:
               if: ${{ vars.RUNNERTYPE == 'vm' }}
               run: |
                 az vm run-command invoke -g ${{ steps.init.outputs.resourceGroupName }} -n ${{ steps.init.outputs.vmName }} --command-id RunShellScript --scripts "cd /actions-runner && export RUNNER_ALLOW_RUNASROOT=\"1\" && ./config.sh remove --token ${{ steps.token.outputs.registrationToken }}"
-             
+                
+            - name: Remove Public IP
+              if: ${{ vars.RUNNERTYPE == 'aks' }}
+              working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
+              run: |
+                terraform state rm azurerm_public_ip.ingressIP
+              env:
+                ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+                ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
+                ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+                ARM_USE_OIDC: true
+                
             - name: Apply Terraform
               working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
               run: |
