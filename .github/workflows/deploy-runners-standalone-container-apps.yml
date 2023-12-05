@@ -76,6 +76,7 @@ jobs:
       outputs:
         acrName: ${{ steps.container-environment.outputs.acrName }}
         environmentName: ${{ steps.container-environment.outputs.environmentName }}
+        userAssignedIdentityId: ${{ steps.container-environment.outputs.userAssignedIdentityId }}
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
         StateStoreContainerName: 'tfstate'
@@ -122,6 +123,7 @@ jobs:
             terraform apply -auto-approve tf_plan
             echo acrName=$(terraform output -raw acrName) >> $GITHUB_OUTPUT
             echo environmentName=$(terraform output -raw environmentName) >> $GITHUB_OUTPUT
+            echo userAssignedIdentityId=$(terraform output -raw userAssignedIdentityId) >> $GITHUB_OUTPUT
           env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}
@@ -186,8 +188,7 @@ jobs:
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
-                --registry-username "${{ needs.create-container-apps-environment.outputs.acrName }}" \
-                --registry-password "${{ secrets.ACR_PWD }}" \
+                --registry-identity ${{ needs.create-container-apps-environment.outputs.userAssignedIdentityId }}
                 --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
