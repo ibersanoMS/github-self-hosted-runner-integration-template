@@ -13,4 +13,5 @@ output "resourceGroupName" {
 
 output "userAssignedIdentityId" {
   value = azurerm_user_assigned_identity.containerAppsJobIdentity.id
+  sensitive = true
 }
