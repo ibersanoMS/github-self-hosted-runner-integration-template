@@ -156,16 +156,15 @@ jobs:
             LOGINSERVER=$(echo $TOKEN | jq -r ".loginServer")
 
             echo "ACR Login Server: $LOGINSERVER"
-            echo "::set-output name=loginServer::$LOGINSERVER"
 
             echo "Passing token as stdin to docker login"
             echo $ACRTOKEN | docker login $LOGINSERVER -u 00000000-0000-0000-0000-000000000000 --password-stdin
         - name: Container import to ACR
           run: |
-            EXISTS=`az acr repository show -n ${{ needs.create-container-apps-environment.outputs.acrName }} --image mariner:2.0 | jq '.name'`
-            if [ $EXISTS -ne "2.0" ]
+            EXISTS=`az acr repository show -n ${{ needs.create-container-apps-environment.outputs.acrName }} --image core:2.0 | jq '.name'`
+            if [ $EXISTS != "2.0" ]
             then
-                az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image mariner:2.0
+                az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image core:2.0
             fi
     deploy-runners:
       needs: [deploy-environment, create-base-image, create-container-apps-environment]
