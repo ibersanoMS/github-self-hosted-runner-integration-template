@@ -194,7 +194,7 @@ jobs:
                 --scale-rule-name "github-runner" \
                 --scale-rule-type "github-runner" \
                 --scale-rule-metadata "github-runner=https://api.github.com" "owner=${{github.repository_owner}}" "runnerScope=repo" "repos=$result" "targetWorkflowQueueLength=1" \
-                --scale-rule-auth "personalAccessToken=personal-access-token" \
+                --scale-rule-auth "personalAccessToken=secretref:personal-access-token" \
                 --cpu "2.0" \
                 --memory "4Gi" \
                 --secrets "personal-access-token=${{ secrets.GH_PAT }}" \
