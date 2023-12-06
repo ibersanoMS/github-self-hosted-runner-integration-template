@@ -181,7 +181,7 @@ jobs:
                 CAE=`az containerapp env show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
                 input_string=${{ github.repository }}
                 result=$(echo "$input_string" | cut -d'/' -f2)
-                az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
+                az containerapp job create -n "runners-v2" -g "${{ needs.deploy-environment.outputs.resourceGroupName }}" --environment "$CAE" \
                 --trigger-type Event \
                 --replica-timeout 1800 \
                 --replica-retry-limit 1 \
@@ -193,10 +193,10 @@ jobs:
                 --polling-interval 30 \
                 --scale-rule-name "github-runner" \
                 --scale-rule-type "github-runner" \
-                --scale-rule-metadata "github-runner=https://api.github.com" "owner=${{github.repository_owner}}" "runnerScope=repo" "repos=$result" "targetWorkflowQueueLength=1" \
-                --scale-rule-auth "personalAccessToken=secretref:personal-access-token" \
+                --scale-rule-metadata "github-runner=https://api.github.com" "owner=${{ github.repository_owner }}" "runnerScope=repo" "repos=$result" "targetWorkflowQueueLength=1" \
+                --scale-rule-auth "personalAccessToken=personal-access-token" \
                 --cpu "2.0" \
                 --memory "4Gi" \
                 --secrets "personal-access-token=${{ secrets.GH_PAT }}" \
-                --env-vars "GH_PAT=secretref:personal-access-token" "REPO_URL=${{github.repositoryUrl}}" "REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/${{github.repository}}/actions/runners/registration-token" \
+                --env-vars "GITHUB_PAT=secretref:personal-access-token" "REPO_URL=https://github.com/${{ github.repository}}" "REGISTRATION_TOKEN_API_URL=https://api.github.com/repos/${{ github.repository }}/actions/runners/registration-token" \
                 --registry-server "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io"
