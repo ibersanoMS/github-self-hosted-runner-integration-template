@@ -187,6 +187,8 @@ jobs:
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
+                --registry-username ${{ needs.create-container-apps-environment.outputs.acrName }} \
+                --registry-password ${{ secrets.ACR_PWD }} \
                 --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/core:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
