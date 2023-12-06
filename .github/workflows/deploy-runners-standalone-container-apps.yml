@@ -162,8 +162,7 @@ jobs:
         - name: Container import to ACR
           run: |
             EXISTS=`az acr repository show -n ${{ needs.create-container-apps-environment.outputs.acrName }} --image core:2.0 | jq '.name'`
-            if [ $EXISTS != "2.0" ]
-            then
+            if [ $EXISTS != "2.0" ]; then
                 az acr import --name ${{ needs.create-container-apps-environment.outputs.acrName }} --source mcr.microsoft.com/cbl-mariner/base/core:2.0 --image core:2.0
             fi
     deploy-runners:
