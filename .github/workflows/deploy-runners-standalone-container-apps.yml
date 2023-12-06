@@ -179,6 +179,8 @@ jobs:
               run: |
                 identity_id=`az identity show -n "containerAppsJobIdentity" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
                 CAE=`az containerapp env show -n ${{ needs.create-container-apps-environment.outputs.environmentName }} -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --query "id" -o tsv`
+                input_string=${{ github.repository }}
+                result=$(echo "$input_string" | cut -d'/' -f2)
                 az containerapp job create -n "runners" -g ${{ needs.deploy-environment.outputs.resourceGroupName }} --environment $CAE \
                 --trigger-type Event \
                 --replica-timeout 1800 \
@@ -191,7 +193,7 @@ jobs:
                 --polling-interval 30 \
                 --scale-rule-name "github-runner" \
                 --scale-rule-type "github-runner" \
-                --scale-rule-metadata "github-runner=https://api.github.com" "owner=${{github.repository_owner}}" "runnerScope=repo" "repos=${{github.repository}}" "targetWorkflowQueueLength=1" \
+                --scale-rule-metadata "github-runner=https://api.github.com" "owner=${{github.repository_owner}}" "runnerScope=repo" "repos=$result" "targetWorkflowQueueLength=1" \
                 --scale-rule-auth "personalAccessToken=personal-access-token" \
                 --cpu "2.0" \
                 --memory "4Gi" \
