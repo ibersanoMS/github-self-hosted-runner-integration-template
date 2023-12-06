@@ -185,7 +185,7 @@ jobs:
                 --replica-retry-limit 1 \
                 --replica-completion-count 1 \
                 --parallelism 1 \
-                --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/mariner:2.0" \
+                --image "${{ needs.create-container-apps-environment.outputs.acrName }}.azurecr.io/core:2.0" \
                 --min-executions 0 \
                 --max-executions 10 \
                 --polling-interval 30 \
