@@ -90,10 +90,13 @@ jobs:
             - name: Apply Terraform
               working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
               run: |
+                  resourceGroupName=$(terraform output -raw resourceGroupName)
                   if [ "${{ vars.RUNNERTYPE }}" == "aks" ]; then
                     terraform destroy -auto-approve -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
-                  else
+                  elif ["${{ vars.RUNNERTYPE }}" == "vm" ]; then
                     terraform destroy -auto-approve -var adminPassword=${{ secrets.ADMIN_PWD }} -var githubRepoUrl="https://github.com/${{github.repository}}" -var selfHostedRunnerToken=${{ steps.token.outputs.registrationToken }} -var selfHostedRunnerName=${{ steps.init.outputs.vmName }} -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
+                  else
+                    terraform destroy -auto-approve -var resourceGroupName=$resourceGroupName -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
                   fi
               env:
                 ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
