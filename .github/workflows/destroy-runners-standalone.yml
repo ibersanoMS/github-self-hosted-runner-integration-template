@@ -92,7 +92,7 @@ jobs:
               run: |
                   if [ "${{ vars.RUNNERTYPE }}" == "aks" ]; then
                     terraform destroy -auto-approve -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
-                  elif ["${{ vars.RUNNERTYPE }}" == "vm" ]; then
+                  elif [ "${{ vars.RUNNERTYPE }}" == "vm" ]; then
                     terraform destroy -auto-approve -var adminPassword=${{ secrets.ADMIN_PWD }} -var githubRepoUrl="https://github.com/${{github.repository}}" -var selfHostedRunnerToken=${{ steps.token.outputs.registrationToken }} -var selfHostedRunnerName=${{ steps.init.outputs.vmName }} -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
                   else
                     terraform destroy -auto-approve -var resourceGroupName=${{ steps.init.outputs.resourceGroupName }} -var stateSaContainerName=${{ env.StateStoreContainerName }} -var stateSaName=${{ vars.STORAGE_ACCOUNT_NAME }} -var stateSaRg=${{ vars.STATE_RESOURCE_GROUP_NAME }}
