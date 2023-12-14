@@ -15,7 +15,7 @@ jobs:
         runs-on: 'ubuntu-latest'
         if: ${{ vars.DESTROYRUNNER == 'true' }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v2
@@ -84,7 +84,7 @@ jobs:
         needs: destroy-runners
         if: ${{ vars.DESTROYALL == 'true' }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v2

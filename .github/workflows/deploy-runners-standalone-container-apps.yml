@@ -19,7 +19,7 @@ jobs:
           location: ${{ steps.runner-infra.outputs.location }}
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v2
@@ -82,7 +82,7 @@ jobs:
         StateStoreContainerName: 'tfstate'
         StateStoreFilename: 'runners.tfstate'
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Setup Terraform
           uses: hashicorp/setup-terraform@v2
           with:
@@ -133,7 +133,7 @@ jobs:
       needs: create-container-apps-environment
       runs-on: 'ubuntu-latest'
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Azure login
           uses: azure/login@v1
           with:
@@ -167,7 +167,7 @@ jobs:
       needs: [deploy-environment, create-base-image, create-container-apps-environment]
       runs-on: 'ubuntu-latest'
       steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             
             - name: Azure login
               uses: azure/login@v1

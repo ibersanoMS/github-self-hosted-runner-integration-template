@@ -17,7 +17,7 @@ jobs:
     outputs:
       resourceGroupName: ${{ steps.vnetInfo.outputs.resourceGroupName }}
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         
         - name: Setup Terraform
           uses: hashicorp/setup-terraform@v2
@@ -74,7 +74,7 @@ jobs:
       StateStoreContainerName: 'tfstate'
       StateStoreFilename: 'runners.tfstate'
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
 
         - name: Generate registration token
           id: token
