@@ -80,7 +80,7 @@ jobs:
       env:
         TerraformWorkingDirectory: 'src/infra/terraform/runners/container-apps'
         StateStoreContainerName: 'tfstate'
-        StateStoreFilename: 'environment.tfstate'
+        StateStoreFilename: 'runners.tfstate'
       steps:
         - uses: actions/checkout@v3
         - name: Setup Terraform
