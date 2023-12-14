@@ -88,7 +88,7 @@ jobs:
                 ARM_USE_OIDC: true
             - name: Delete Container Apps Job
               run: | 
-                az containerapp job delete -n "runners-v2" -g "${{ needs.deploy-environment.outputs.resourceGroupName }}"
+                az containerapp job delete -n "runners-v2" -g "${{ steps.init.outputs.resourceGroupName }}" --yes
 
             - name: Apply Terraform
               working-directory: 'src/infra/terraform/runners/${{ vars.RUNNERTYPE }}'
