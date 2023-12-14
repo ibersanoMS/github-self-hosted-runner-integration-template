@@ -1,4 +1,4 @@
-name: Destroy runner(s)
+name: Destroy ACA runner(s)
 on:
     workflow_dispatch:
 
