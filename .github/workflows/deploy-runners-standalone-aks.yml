@@ -183,6 +183,6 @@ jobs:
                 
                 kubectl apply -n actions-runner-system -f ingress.yaml
                 sed -i '/repository:/c\      repository: ${{ github.repository }}' runnerdeployment.yaml
-                sed -i '/email:/c\      email: ${{ secrets.email }}' certissuer.yaml
+                sed -i '/email:/c\    email: ${{ secrets.email }}' certissuer.yaml
                 kubectl apply -f runnerdeployment.yaml
                 kubectl apply -f hra.yaml
