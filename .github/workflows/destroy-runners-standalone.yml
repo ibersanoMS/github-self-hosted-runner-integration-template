@@ -87,6 +87,7 @@ jobs:
                 ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
                 ARM_USE_OIDC: true
             - name: Delete Container Apps Job
+              if: ${{ vars.RUNNERTYPE == 'container-apps' }}
               run: | 
                 az containerapp job delete -n "runners-v2" -g "${{ steps.init.outputs.resourceGroupName }}" --yes
 
