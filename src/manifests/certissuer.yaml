@@ -6,7 +6,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: ibersano@microsoft.com
+    email: <Email>
     privateKeySecretRef:
       name: cert-manager-selfhosted
     solvers:
