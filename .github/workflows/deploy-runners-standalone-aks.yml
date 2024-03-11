@@ -127,7 +127,7 @@ jobs:
 
            # Set the target Azure Kubernetes Service (AKS) cluster. 
             - name: Set AKS context
-              uses: azure/aks-set-context@v3
+              uses: azure/aks-set-context@v4
               with:
                 cluster-name: ${{ steps.clusterInfo.outputs.clusterName }}
                 resource-group: ${{ steps.clusterInfo.outputs.resourceGroupName }}
